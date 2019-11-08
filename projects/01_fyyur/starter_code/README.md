@@ -70,8 +70,8 @@ Highlight folders:
 Instructions
 -----
 
-1. Understand the Project Structure (explained above) and where important files are located.
-2. Build and run local development following the Development Setup steps below.
+// DONE Understand the Project Structure (explained above) and where important files are located.
+// DONE Build and run local development following the Development Setup steps below.
 3. Fill in the missing functionality in this application: this application currently pulls in fake data, and needs to now connect to a real database and talk to a real backend.
 3. Fill out every `TODO` section throughout the codebase. We suggest going in order of the following:
 
