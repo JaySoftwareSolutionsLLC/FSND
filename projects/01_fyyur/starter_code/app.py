@@ -23,9 +23,8 @@ import models
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:$u944jAk161519@localhost:5432/todoapp'
 db = SQLAlchemy(app)
-# TODONE: connect to a local postgresql database
+# DONE: connect to a local postgresql database
 
 migrate = Migrate(app, db)
 
@@ -34,7 +33,7 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -44,11 +43,23 @@ class Venue(db.Model):
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    # genres = *-*
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean())
+    seeking_description = db.Column(db.String(1000), nullable = True)
+    # past_shows = derived
+    # upcoming_shows = derived
+    # past_shows_count = derived
+    # upcoming_shows_count = derived
+    shows = db.relationship('Show', backref='venue', lazy=True, cascade = 'delete-orphan')
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    def __repr__(self):
+      return f'<Venue ID: {self.id}, Name: {self.name}>'
+
+    # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -58,10 +69,33 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    # genres = *-*
+    website = db.Column(db.String(120))
+    seeking_venue = db.Column(db.Boolean())
+    seeking_description = db.Column(db.String(1000), nullable = True)
+    # past_shows = derived
+    # upcoming_shows = derived
+    # past_shows_count = derived
+    # upcoming_shows_count = derived
+    shows = db.relationship('Show', backref='artist', lazy=True, cascade = 'delete-orphan')
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    def upcoming_shows():
+      return 'WIP'
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
+    # DONE: implement any missing fields, as a database migration using Flask-Migrate
+
+class Show(db.Model): # May need to restructure this as an association table?
+  __tablename__ = 'shows'
+
+  # venue_id = db.Column(db.Integer, ForeignKey('venues.id'), primary_key = True)
+  venue_id = db.Column(db.ForeignKey('venues.id'), primary_key = True)
+  # artist_id = db.Column(db.Integer, ForeignKey('artists.id'), primary_key = True)
+  artist_id = db.Column(db.ForeignKey('artists.id'), primary_key = True)
+  
+  start_time = db.Column(db.DateTime(), primary_key = True)
+
+# DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -85,50 +119,53 @@ app.jinja_env.filters['datetime'] = format_datetime
 def index():
   return render_template('pages/home.html')
 
-
 #  Venues
 #  ----------------------------------------------------------------
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data)
+  # DONE: replace with real venues data.
+  # DONE: num_shows should be aggregated based on number of upcoming shows per venue.
+  areas = [] # areas is an array to house each state/city combination and show the venues located in that city as well as the # of upcoming shows that they have
+  from sqlalchemy import func
+  venues = Venue.query.all() # retrieve all venues
+  # Loop through each venue distinct city/state combo
+  for v in db.session.query(Venue.city, Venue.state).distinct():
+    venue_array = []
+    for v_sub in db.session.query(Venue.id, Venue.name).filter_by(city = v.city).filter_by(state = v.state):
+      upcoming_shows = db.session.query(Show.artist_id).filter(Show.venue_id == v_sub.id).filter(Show.start_time >= func.current_date()).count()
+      venue_array.append({'id' : v_sub.id, 'name' : v_sub.name, 'num_upcoming_shows' : upcoming_shows})
+    obj = {'city' : v.city, 'state' : v.state, 'venues' : venue_array}
+    areas.append(obj)
+  return render_template('pages/venues.html', areas=areas)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+
+  # response = # count & array of objects inside of 'data'
+  search_term = request.form.get('search_term', 'Pianos')
+  relevant_venues_count = db.session.query(Venue).filter(Venue.name.like('%' + search_term + '%')).count()
+  relevant_venues = db.session.query(Venue).filter(Venue.name.like('%' + search_term + '%')).all()
   response={
-    "count": 1,
-    "data": [{
+    'count': relevant_venues_count,
+    "data": [{ # WIP
       "id": 2,
       "name": "The Dueling Pianos Bar",
       "num_upcoming_shows": 0,
     }]
   }
+
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
@@ -176,7 +213,7 @@ def show_venue(venue_id):
     "upcoming_shows_count": 0,
   }
   data3={
-    "id": 3,
+    "id": 4,
     "name": "Park Square Live Music & Coffee",
     "genres": ["Rock n Roll", "Jazz", "Classical", "Folk"],
     "address": "34 Whiskey Moore Ave",
@@ -212,6 +249,23 @@ def show_venue(venue_id):
     "past_shows_count": 1,
     "upcoming_shows_count": 1,
   }
+  # data4={
+  #   "id": 4,
+  #   "name": "Brewster Casino",
+  #   "genres": ["Rock n Roll"],
+  #   "address": "1994 Transit Road",
+  #   "city": "Buffalo",
+  #   "state": "NY",
+  #   "phone": "716-867-5309",
+  #   "website": "https://www.casinobrew.com",
+  #   "facebook_link": "https://www.facebook.com/CasinoBrew",
+  #   "seeking_talent": True,
+  #   "image_link": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Calder_Casino_boasts_a_100%2C000_sq._ft._gaming_floor.jpg",
+  #   "past_shows": [],
+  #   "upcoming_shows": [],
+  #   "past_shows_count": 0,
+  #   "upcoming_shows_count": 0,
+  # }
   data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
   return render_template('pages/show_venue.html', venue=data)
 
@@ -518,7 +572,7 @@ if not app.debug:
 
 # Default port:
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 
 # Or specify port manually:
 '''
