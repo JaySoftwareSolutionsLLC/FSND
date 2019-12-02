@@ -7,9 +7,14 @@
 			<h1 class="monospace">
 				{{ venue.name }}
 			</h1>
-			<button class='delete-venue' data-id="{{ venue.id }}" style='background: none; border-radius: 5rem; border: none;'>
-				<i class='fas fa-trash-alt'></i>
-			</button>
+			<span class='right-side' style='display: inline-flex; align-items: center;'>
+					<button class='delete-venue' data-id="{{ venue.id }}" style='background: none; border-radius: 5rem; border: none;'>
+						<i class='fas fa-trash-alt'></i>
+					</button>
+					<a href='/venues/{{ venue.id }}/edit' style='color: black;'>
+						<i class='fas fa-edit'></i>
+					</a>
+			</span>
 		</span>
 		<p class="subtitle">
 			ID: {{ venue.id }}

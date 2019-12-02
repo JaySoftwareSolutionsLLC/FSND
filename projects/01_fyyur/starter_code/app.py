@@ -161,7 +161,7 @@ def delete_venue(venue_id):
 
   # DONE BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
-  return render_template('pages/home.html')
+  return jsonify(response)
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -199,17 +199,49 @@ def show_artist(artist_id):
   artist.past_shows_count = len(artist.past_shows)
   artist.upcoming_shows_count = len(artist.upcoming_shows)
 
+  artist.display_genres = []
+  for g in artist.genres:
+    artist.display_genres.append(Genre.query.get(g.genre_id).name)
+
   return render_template('pages/show_artist.html', artist=artist)
+
+@app.route('/artists/<artist_id>', methods=['DELETE'])
+def delete_artist(artist_id):
+  # WIP: Complete this endpoint for taking a artist_id, and using
+  # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+  # artist_to_be_deleted = Artist.query.get(artist_id)
+  # response = {'artist' : artist_to_be_deleted}
+  response = {}
+  error = False
+  try:
+    ArtistGenre.query.filter_by(artist_id = artist_id).delete()
+    Artist.query.filter_by(id = artist_id).delete()
+    db.session.commit()
+  except:
+    db.session.rollback()
+    error = True
+  finally:
+    db.session.close()
+  if error:
+    response['message'] = 'Failed to delete Artist.'
+  else:
+    response['message'] = 'Artist successfully deleted.'
+
+  return jsonify(response)
 
 #  Update
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
   artist = Artist.query.get(artist_id)
+  artist.display_genres = []
+  for g in artist.genres:
+    artist.display_genres.append(Genre.query.get(g.genre_id).name)
   form = ArtistForm(obj=artist)
   if (not bool(artist)):
     return render_template('errors/404.html')
   # DONE?: populate form with fields from artist with ID <artist_id>
+  # return ' - '.join(artist.display_genres)
   return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
@@ -226,6 +258,28 @@ def edit_artist_submission(artist_id):
     artist.state = state
     artist.phone = phone
     artist.facebook_link = facebook_link
+
+    # Delete all artist_genre rows that were not selected. Then loop through genres and add artist_genre rows where applicable.
+    genres = request.form.getlist('display_genres') # This will be list of string values
+    # return ' ~ '.join(request.form.getlist('display_genres')) 
+    
+    previous_genres = ArtistGenre.query.filter_by(artist_id = artist_id).all() # Will be list of ArtistGenre objects
+    previous_genre_ints = [] # List of ints
+    genre_ints = [] # List of ints
+    for pg in previous_genres:
+      previous_genre_ints.append(pg.genre_id)
+    # return str(previous_genre_ints[0])
+    for g in genres:
+      genre_obj = db.session.query(Genre).filter_by(name = g).first()
+      genre_ints.append(genre_obj.id)
+    # return str(len(genre_ints))
+    for pgi in previous_genre_ints:
+      if (pgi not in genre_ints):
+        ArtistGenre.query.filter_by(artist_id = artist_id).filter_by(genre_id = pgi).delete()
+    for gi in genre_ints:
+      if (gi not in previous_genre_ints):
+        new_ArtistGenre = ArtistGenre(artist_id = artist_id, genre_id = gi)
+        db.session.add(new_ArtistGenre)
     db.session.commit()
   except:
     db.session.rollback()
@@ -290,17 +344,27 @@ def create_artist_submission():
   address = request.form.get('address', '')
   phone = request.form.get('phone', '')
   facebook_link = request.form.get('facebook_link', '')
+  genres = request.form.getlist('display_genres') # This will be list of string values
+  genre_ints = []
+  for g in genres:
+    genre_obj = db.session.query(Genre).filter_by(name = g).first()
+    genre_ints.append(genre_obj.id)
+  # return str(len(genre_ints))
   try:
     # Create a new Artist object based on posted values
     new_artist = Artist(name=name, city=city, state=state, phone=phone, facebook_link=facebook_link)
     db.session.add(new_artist)
+    db.session.commit()
+    artist_obj = Artist.query.filter_by(name = new_artist.name).first()
+    for gi in genre_ints:
+      new_ArtistGenre = ArtistGenre(artist_id = artist_obj.id, genre_id = gi)
+      db.session.add(new_ArtistGenre)
     db.session.commit()
     body['name'] = new_artist.name
     body['error'] = ''
   except:
     db.session.rollback()
     error=True
-    print(sys.exc_info()) # Print system execution info
     body['name'] = ''
     body['error'] = 'Ooops...something went wrong.'
   finally:

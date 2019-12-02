@@ -1,17 +1,8 @@
 
-# import json
-# import dateutil.parser
-# import babel
 from flask import Flask
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
-# import logging
-# from logging import Formatter, FileHandler
-# from flask_wtf import Form
-# from forms import *
-# Added
 from flask_migrate import Migrate
-# import config
 from sqlalchemy import func
 
 app = Flask(__name__)
@@ -42,6 +33,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean())
     seeking_description = db.Column(db.String(1000), nullable = True)
     shows = db.relationship('Show', backref='venue', lazy=True, cascade = 'delete-orphan')
+    genres = db.relationship('GenreVenue', backref='venue', lazy=True, cascade = 'delete-orphan')
 
     def upcoming_shows(self):
       shows = db.session.query(Show).filter(Show.venue_id == self.id).filter(Show.start_time >= func.current_date()).all()
@@ -89,6 +81,7 @@ class Artist(db.Model):
     # past_shows_count = derived
     # upcoming_shows_count = derived
     shows = db.relationship('Show', backref='artist', lazy=True, cascade = 'delete-orphan')
+    genres = db.relationship('ArtistGenre', backref='artist', lazy=True, cascade = 'delete-orphan')
 
     def upcoming_shows(self):
       shows = db.session.query(Show).filter(Show.artist_id == self.id).filter(Show.start_time >= func.current_date()).all()
@@ -109,7 +102,7 @@ class Artist(db.Model):
 
     # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
-class Show(db.Model): # May need to restructure this as an association table?
+class Show(db.Model):
   __tablename__ = 'shows'
 
   venue_id = db.Column(db.ForeignKey('venues.id'), primary_key = True)
@@ -118,3 +111,17 @@ class Show(db.Model): # May need to restructure this as an association table?
   start_time = db.Column(db.DateTime(), primary_key = True)
 
 # DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
+class Genre(db.Model): # Defines each genre option. No CRUD interface required...these are hard-coded.
+  __tablename__ = 'genres'
+
+  id = db.Column(db.Integer, primary_key=True)
+  name = db.Column(db.String)
+
+class ArtistGenre(db.Model): # association table between Artist & Genre
+  artist_id = db.Column(db.ForeignKey('artists.id'), primary_key = True)
+  genre_id = db.Column(db.ForeignKey('genres.id'), primary_key = True)
+
+class GenreVenue(db.Model): # association table between Venue & Genre
+  genre_id = db.Column(db.ForeignKey('genres.id'), primary_key = True)
+  venue_id = db.Column(db.ForeignKey('venues.id'), primary_key = True)

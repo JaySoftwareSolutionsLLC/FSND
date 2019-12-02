@@ -3,15 +3,25 @@
 {% block content %}
 <div class="row">
 	<div class="col-sm-6">
-		<h1 class="monospace">
-			{{ artist.name }}
-		</h1>
+		<span style='display: inline-flex; justify-content: space-between; width: 100%; box-sizing: border-box;'>
+			<h1 class="monospace">
+				{{ artist.name }}
+			</h1>
+			<span class='right-side' style='display: inline-flex; align-items: center;'>
+					<button class='delete-artist' data-id="{{ artist.id }}" style='background: none; border-radius: 5rem; border: none;'>
+						<i class='fas fa-trash-alt'></i>
+					</button>
+					<a href='/artists/{{ artist.id }}/edit' style='color: black;'>
+						<i class='fas fa-edit'></i>
+					</a>
+			</span>
+		</span>
 		<p class="subtitle">
 			ID: {{ artist.id }}
 		</p>
 		<div class="genres">
-			{% if artist.genres %}
-			{% for genre in artist.genres %}
+			{% if artist.display_genres %}
+			{% for genre in artist.display_genres %}
 			<span class="genre">{{ genre }}</span>
 			{% endfor %}
 			{% endif %}
@@ -27,7 +37,7 @@
 		</p>
 		<p>
 			<i class="fab fa-facebook-f"></i> {% if artist.facebook_link %}<a href="{{ artist.facebook_link }}" target="_blank">{{ artist.facebook_link }}</a>{% else %}No Facebook Link{% endif %}
-        </p>
+		</p>
 		{% if artist.seeking_venue %}
 		<div class="seeking">
 			<p class="lead">Currently seeking performance venues</p>
@@ -42,7 +52,7 @@
 		{% endif %}
 	</div>
 	<div class="col-sm-6">
-		<img src="{{ artist.image_link }}" alt="Venue Image" />
+		<img src="{{ artist.image_link }}" alt="Artist Image" />
 	</div>
 </div>
 <section>
