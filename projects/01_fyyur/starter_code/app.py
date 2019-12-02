@@ -90,6 +90,10 @@ def show_venue(venue_id):
   venue.past_shows_count = len(venue.past_shows)
   venue.upcoming_shows_count = len(venue.upcoming_shows)
 
+  venue.display_genres = []
+  for g in venue.genres:
+    venue.display_genres.append(Genre.query.get(g.genre_id).name)
+
   return render_template('pages/show_venue.html', venue=venue)
 
 #  Create Venue
@@ -112,10 +116,20 @@ def create_venue_submission():
   address = request.form.get('address', '')
   phone = request.form.get('phone', '')
   facebook_link = request.form.get('facebook_link', '')
+  genres = request.form.getlist('display_genres') # This will be list of string values
+  genre_ints = []
+  for g in genres:
+    genre_obj = db.session.query(Genre).filter_by(name = g).first()
+    genre_ints.append(genre_obj.id)
   try:
     # Create a new Venue object based on posted values
     new_venue = Venue(name=name, city=city, state=state, address=address, phone=phone, facebook_link=facebook_link)
     db.session.add(new_venue)
+    db.session.commit()
+    venue_obj = Venue.query.filter_by(name = new_venue.name).first()
+    for gi in genre_ints:
+      new_GenreVenue = GenreVenue(venue_id = venue_obj.id, genre_id = gi)
+      db.session.add(new_GenreVenue)
     db.session.commit()
     body['name'] = new_venue.name
     body['error'] = ''
@@ -147,6 +161,7 @@ def delete_venue(venue_id):
   response = {'venue' : venue_to_be_deleted}
   error = False
   try:
+    GenreVenue.query.filter_by(venue_id = venue_id).delete()
     Venue.query.filter_by(id=venue_id).delete()
     db.session.commit()
   except:
@@ -294,10 +309,14 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   venue = Venue.query.get(venue_id)
+  venue.display_genres = []
+  for g in venue.genres:
+    venue.display_genres.append(Genre.query.get(g.genre_id).name)
   form = VenueForm(obj=venue)
   if (not bool(venue)):
     return render_template('errors/404.html')
   # DONE?: populate form with fields from venue with ID <venue_id>
+  # return ' - '.join(venue.display_genres)
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
@@ -306,14 +325,38 @@ def edit_venue_submission(venue_id):
     name = request.form.get('name', '')
     city = request.form.get('city', '')
     state = request.form.get('state', '')
+    address = request.form.get('address', '')
     phone = request.form.get('phone', '')
     facebook_link = request.form.get('facebook_link', '')
     venue = Venue.query.get(venue_id)
     venue.name = name
     venue.city = city
     venue.state = state
+    venue.address = address
     venue.phone = phone
     venue.facebook_link = facebook_link
+
+    # Delete all venue_genre rows that were not selected. Then loop through genres and add venue_genre rows where applicable.
+    genres = request.form.getlist('display_genres') # This will be list of string values
+    # return ' ~ '.join(request.form.getlist('display_genres')) 
+    
+    previous_genres = GenreVenue.query.filter_by(venue_id = venue_id).all() # Will be list of GenreVenue objects
+    previous_genre_ints = [] # List of ints
+    genre_ints = [] # List of ints
+    for pg in previous_genres:
+      previous_genre_ints.append(pg.genre_id)
+    # return str(previous_genre_ints[0])
+    for g in genres:
+      genre_obj = db.session.query(Genre).filter_by(name = g).first()
+      genre_ints.append(genre_obj.id)
+    # return str(len(genre_ints))
+    for pgi in previous_genre_ints:
+      if (pgi not in genre_ints):
+        GenreVenue.query.filter_by(venue_id = venue_id).filter_by(genre_id = pgi).delete()
+    for gi in genre_ints:
+      if (gi not in previous_genre_ints):
+        new_GenreVenue = GenreVenue(venue_id = venue_id, genre_id = gi)
+        db.session.add(new_GenreVenue)
     db.session.commit()
   except:
     db.session.rollback()
@@ -341,7 +384,6 @@ def create_artist_submission():
   name = request.form.get('name', '')
   city = request.form.get('city', '')
   state = request.form.get('state', '')
-  address = request.form.get('address', '')
   phone = request.form.get('phone', '')
   facebook_link = request.form.get('facebook_link', '')
   genres = request.form.getlist('display_genres') # This will be list of string values

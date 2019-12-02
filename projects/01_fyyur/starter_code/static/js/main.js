@@ -6,7 +6,8 @@ $('button.delete-venue').on('click', function() {
             url: `/venues/${thisVenueId}`,
             method: 'DELETE',
         })
-        .always(function() {
+        .always(function(response) {
+            // alert(JSON.stringify(response));
             window.location.replace('/venues');
         });
     }
@@ -20,7 +21,7 @@ $('button.delete-artist').on('click', function() {
             method: 'DELETE',
         })
         .always(function(response) {
-            alert(JSON.stringify(response));
+            // alert(JSON.stringify(response));
             window.location.replace('/artists');
         });
     }
