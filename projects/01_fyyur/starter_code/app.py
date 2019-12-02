@@ -15,116 +15,12 @@ from forms import *
 # Added
 from flask_migrate import Migrate
 import config
-import models
 from sqlalchemy import func
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
 
-app = Flask(__name__)
-moment = Moment(app)
-app.config.from_object('config')
-db = SQLAlchemy(app)
-# DONE: connect to a local postgresql database
-
-migrate = Migrate(app, db)
-
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'venues'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    # genres = *-*
-    website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean())
-    seeking_description = db.Column(db.String(1000), nullable = True)
-    shows = db.relationship('Show', backref='venue', lazy=True, cascade = 'delete-orphan')
-
-    def upcoming_shows(self):
-      shows = db.session.query(Show).filter(Show.venue_id == self.id).filter(Show.start_time >= func.current_date()).all()
-      for s in shows:
-        artist = Artist.query.get(s.artist_id)
-        s.artist_name = artist.name
-        s.artist_image_link = artist.image_link
-        s.start_time = str(s.start_time)
-      return shows
-    def past_shows(self):
-      shows = db.session.query(Show).filter(Show.venue_id == self.id).filter(Show.start_time < func.current_date()).all()
-      for s in shows:
-        artist = Artist.query.get(s.artist_id)
-        s.artist_name = artist.name
-        s.artist_image_link = artist.image_link
-        s.start_time = str(s.start_time)
-      return shows
-    def upcoming_show_count(self):
-      return len(self.upcoming_shows())
-    def past_show_count(self):
-      return len(self.past_shows())
-    
-    def __repr__(self):
-      return f'<Venue ID: {self.id}, Name: {self.name}>'
-
-    # DONE: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'artists'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    # genres = *-*
-    website = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean())
-    seeking_description = db.Column(db.String(1000), nullable = True)
-    # past_shows = derived
-    # upcoming_shows = derived
-    # past_shows_count = derived
-    # upcoming_shows_count = derived
-    shows = db.relationship('Show', backref='artist', lazy=True, cascade = 'delete-orphan')
-
-    def upcoming_shows(self):
-      shows = db.session.query(Show).filter(Show.artist_id == self.id).filter(Show.start_time >= func.current_date()).all()
-      for s in shows:
-        venue = Venue.query.get(s.venue_id)
-        s.venue_name = venue.name
-        s.venue_image_link = venue.image_link
-        s.start_time = str(s.start_time)
-      return shows
-    def past_shows(self):
-      shows = db.session.query(Show).filter(Show.artist_id == self.id).filter(Show.start_time < func.current_date()).all()
-      for s in shows:
-        venue = Venue.query.get(s.venue_id)
-        s.venue_name = venue.name
-        s.venue_image_link = venue.image_link
-        s.start_time = str(s.start_time)
-      return shows
-
-    # DONE: implement any missing fields, as a database migration using Flask-Migrate
-
-class Show(db.Model): # May need to restructure this as an association table?
-  __tablename__ = 'shows'
-
-  venue_id = db.Column(db.ForeignKey('venues.id'), primary_key = True)
-  artist_id = db.Column(db.ForeignKey('artists.id'), primary_key = True)
-  
-  start_time = db.Column(db.DateTime(), primary_key = True)
-
-# DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+from models import *
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -471,6 +367,33 @@ def create_show_submission():
     flash('An error occurred. Show could not be listed. Please try again. If this issue persists, call support.')
   
   return render_template('pages/home.html')
+
+# NEW FUNCTIONALITY
+@app.route('/shows/search', methods=['POST'])
+def search_shows():
+  search_term = request.form.get('search_term', '')
+  relevant_shows = []
+  all_shows = Show.query.all()
+  for s in all_shows:
+    s.start_time = str(s.start_time)
+    artist = Artist.query.filter_by(id=s.artist_id).first()
+    s.artist_name = artist.name
+    s.artist_image_link = artist.image_link
+    venue = Venue.query.filter_by(id=s.venue_id).first()
+    s.venue_name = venue.name
+    if (search_term.lower() in artist.name.lower()):
+      relevant_shows.append(s)
+      continue
+    if (search_term.lower() in venue.name.lower()):
+      relevant_shows.append(s)
+      continue
+      
+  # relevant_shows = db.session.query(Venue).filter(Venue.name.ilike('%' + search_term + '%')).all()
+  response={
+    'count': len(relevant_shows),   
+    "data": relevant_shows
+  }
+  return render_template('pages/search_shows.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.errorhandler(404)
 def not_found_error(error):

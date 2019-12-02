@@ -73,29 +73,28 @@ Instructions
 // DONE Understand the Project Structure (explained above) and where important files are located.
 // DONE Build and run local development following the Development Setup steps below.
 // DONE? Fill in the missing functionality in this application: this application currently pulls in fake data, and needs to now connect to a real database and talk to a real backend.
-4. Fill out every `TODO` section throughout the codebase. We suggest going in order of the following:
+// DONE Fill out every `TODO` section throughout the codebase. We suggest going in order of the following:
 
   // DONE Connect to a database in `config.py`. A project submission that uses a local database connection is fine.
-  2. Using SQLAlchemy, set up normalized models for the objects we support in our web app in `/models.py`. Check out the sample pages provided at /artists/1, /venues/1, and /shows/1 for examples of the data we want to model, using all of the learned best practices in database schema design. Implement missing model properties and relationships using database migrations via Flask-Migrate.
-  3. Implement form submissions for creating new Venues, Artists, and Shows. There should be proper constraints, powering the `/create` endpoints that serve the create form templates, to avoid duplicate or nonsensical form submissions. Submitting a form should create proper new records in the database.
-  4. Implement the controllers for listing venues, artists, and shows. Note the structure of the mock data used. We want to keep the structure of the mock data.
-  5. Implement search, powering the `/search` endpoints that serve the application's search functionalities.
-  6. Serve venue and artist detail pages, powering the `<venue|artist>/<id>` endpoints that power the detail pages.
+  DONE Using SQLAlchemy, set up normalized models for the objects we support in our web app in `/models.py`. Check out the sample pages provided at /artists/1, /venues/1, and /shows/1 for examples of the data we want to model, using all of the learned best practices in database schema design. Implement missing model properties and relationships using database migrations via Flask-Migrate.
+  DONE Implement form submissions for creating new Venues, Artists, and Shows. There should be proper constraints, powering the `/create` endpoints that serve the create form templates, to avoid duplicate or nonsensical form submissions. Submitting a form should create proper new records in the database.
+  DONE Implement the controllers for listing venues, artists, and shows. Note the structure of the mock data used. We want to keep the structure of the mock data.
+  DONE Implement search, powering the `/search` endpoints that serve the application's search functionalities.
+  DONE Serve venue and artist detail pages, powering the `<venue|artist>/<id>` endpoints that power the detail pages.
 
 
 Acceptance Criteria
 -----
 
-1. The web app should be successfully connected to a PostgreSQL database. A local connection to a database on your local computer is fine.
-2. There should be no use of mock data throughout the app. The data structure of the mock data per controller should be kept unmodified when satisfied by real data.
-3. The application should behave just as before with mock data, but now uses real data from a real backend server, with real search functionality. For example:
-  * when a user submits a new artist record, the user should be able to see it populate in /artists, as well as search for the artist by name and have the search return results.
-  * I should be able to go to the URL `/artist/<artist-id>` to visit a particular artist’s page using a unique ID per artist, and see real data about that particular artist.
-  * Venues should continue to be displayed in groups by city and state.
-  * Search should be allowed to be partial string matching and case-insensitive.
-  * Past shows versus Upcoming shows should be distinguished in Venue and Artist pages.
-  * A user should be able to click on the venue for an upcoming show in the Artist's page, and on that Venue's page, see the same show in the Venue Page's upcoming shows section.
-4. For the models
+DONE The web app should be successfully connected to a PostgreSQL database. A local connection to a database on your local computer is fine.
+DONE There should be no use of mock data throughout the app. The data structure of the mock data per controller should be kept unmodified when satisfied by real data.
+DONE The application should behave just as before with mock data, but now uses real data from a real backend server, with real search functionality. For example:
+  TESTED when a user submits a new artist record, the user should be able to see it populate in /artists, as well as search for the artist by name and have the search return results.
+  TESTED I should be able to go to the URL `/artist/<artist-id>` to visit a particular artist’s page using a unique ID per artist, and see real data about that particular artist.
+  TESTED Venues should continue to be displayed in groups by city and state.
+  TESTED Search should be allowed to be partial string matching and case-insensitive.
+  TESTED Past shows versus Upcoming shows should be distinguished in Venue and Artist pages.
+  TESTED A user should be able to click on the venue for an upcoming show in the Artist's page, and on that Venue's page, see the same show in the Venue Page's upcoming shows section.
 
 ##### Stand Out
 
@@ -118,23 +117,23 @@ First, [install Flask](http://flask.pocoo.org/docs/1.0/installation/#install-fla
 
 To start and run the local development server,
 
-1. Initialize and activate a virtualenv:
+DONE Initialize and activate a virtualenv:
   ```
   $ cd YOUR_PROJECT_DIRECTORY_PATH/
   $ virtualenv --no-site-packages env
   $ source env/bin/activate
   ```
 
-2. Install the dependencies:
+DONE Install the dependencies:
   ```
   $ pip install -r requirements.txt
   ```
 
-3. Run the development server:
+DONE Run the development server:
   ```
   $ export FLASK_APP=myapp
   $ export FLASK_ENV=development # enables debug mode
   $ python3 app.py
   ```
 
-4. Navigate to Home page [http://localhost:5000](http://localhost:5000)
+DONE Navigate to Home page [http://localhost:5000](http://localhost:5000)
