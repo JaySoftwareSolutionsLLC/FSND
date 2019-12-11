@@ -68,12 +68,17 @@ def create_app(test_config=None):
     start = (page - 1) * pageSize
     end = start + pageSize
 
+    categories = Category.query.all()
+    formatted_categories = [category.format() for category in categories]
+
     questions = Question.query.all()
     formatted_questions = [question.format() for question in questions]
     return jsonify({
       "success":True,
       "questions":formatted_questions[start:end],
-      "total_questions":len(formatted_questions)
+      "categories":formatted_categories,
+      "total_questions":len(formatted_questions),
+
     })
 
   '''
@@ -83,11 +88,10 @@ def create_app(test_config=None):
   @TODO TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
-  @app.route('/api/questions', methods=['DELETE'])
-  def delete_question():
+  @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
+  def delete_question(question_id):
     response = {}
-    id = request.json['id']
-    question_to_delete = Question.query.get(id)
+    question_to_delete = Question.query.get(question_id)
     response['request'] = question_to_delete.format()
     try:
       question_to_delete.delete()
@@ -169,7 +173,8 @@ def create_app(test_config=None):
     return jsonify({
       "success":True,
       "questions":formatted_questions,
-      "total_questions":len(formatted_questions)
+      "total_questions":len(formatted_questions),
+      "currentCategory":category_id
     })
 
 
@@ -186,16 +191,30 @@ def create_app(test_config=None):
   '''
   @app.route('/api/play', methods = ['POST'])
   def play():
-    category_id = request.json['categoryId']
-    previous_question_ids = request.json['previousQuestionIds']
+    if 'quiz_category' in request.json:
+      category_id = request.json['quiz_category']
+    else:
+      category_id = None
+      
+    previous_question_ids = request.json['previous_questions'] 
 
-    relevant_questions = db.session.query(Question).filter(Question.id.notin_(previous_question_ids)).filter(Question.category == category_id).all()
-    chosen_question = random.choice(relevant_questions)
-    formatted_question = chosen_question.format()
-    return jsonify({
-      "success":True,
-      "question":formatted_question,
-    })
+    if category_id:
+      relevant_questions = db.session.query(Question).filter(Question.id.notin_(previous_question_ids)).filter(Question.category == category_id).all()
+    else:
+      relevant_questions = db.session.query(Question).filter(Question.id.notin_(previous_question_ids)).all()
+    
+    if len(relevant_questions) > 0:
+      chosen_question = random.choice(relevant_questions)
+      formatted_question = chosen_question.format()
+      return jsonify({
+        "success":True,
+        "question":formatted_question,
+      })
+    else:
+      return jsonify({
+        "success":True,
+        "question":"There are no remaining questions for this input"
+      })
 
   '''
   @DONE: 
@@ -210,7 +229,7 @@ def create_app(test_config=None):
         "message": "resource not found"
     }), 404
   @app.errorhandler(422)
-  def not_found(error):
+  def unprocessable_entity(error):
     return jsonify({
         "success": False,
         "error": 422,
@@ -218,5 +237,3 @@ def create_app(test_config=None):
     }), 422
 
   return app
-
-    
