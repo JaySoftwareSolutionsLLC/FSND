@@ -24,7 +24,7 @@ def create_app(test_config=None):
   @app.after_request
   def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST')
     return response
 
   '''
@@ -35,16 +35,16 @@ def create_app(test_config=None):
   @app.route('/api/categories', methods=['GET'])
   # @cross_origin()
   def retrieve_categories():
-    page = request.args.get('page', 1, type=int) # Retrieve page argument from request to specify which plants to return
-    pageSize = 10
-    start = (page - 1) * pageSize
-    end = start + pageSize
+    # page = request.args.get('page', 1, type=int) # Retrieve page argument from request to specify which plants to return
+    # pageSize = 10
+    # start = (page - 1) * pageSize
+    # end = start + pageSize
 
     categories = Category.query.all()
     formatted_categories = [category.format() for category in categories]
     return jsonify({
       "success":True,
-      "categories":formatted_categories[start:end],
+      "categories":formatted_categories,
       "total_categories":len(formatted_categories)
     })
 
