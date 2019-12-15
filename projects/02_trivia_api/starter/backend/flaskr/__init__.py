@@ -55,7 +55,7 @@ def create_app(test_config=None):
   This endpoint should return a list of questions, 
   number of total questions, current category, categories.
 
-  @TODO TEST: At this point, when you start the application
+  @DONE TEST: At this point, when you start the application
   you should see questions and categories generated,
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
@@ -85,15 +85,15 @@ def create_app(test_config=None):
   @DONE: 
   Create an endpoint to DELETE question using a question ID. 
 
-  @TODO TEST: When you click the trash icon next to a question, the question will be removed.
+  @DONE TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
   @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
   def delete_question(question_id):
     response = {}
     question_to_delete = Question.query.get(question_id)
-    response['request'] = question_to_delete.format()
     try:
+      response['request'] = question_to_delete.format()
       question_to_delete.delete()
       db.session.commit()
       response['success'] = True
@@ -110,7 +110,7 @@ def create_app(test_config=None):
   which will require the question and answer text, 
   category, and difficulty score.
 
-  @TODO TEST: When you submit a question on the "Add" tab, 
+  @DONE TEST: When you submit a question on the "Add" tab, 
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
@@ -140,7 +140,7 @@ def create_app(test_config=None):
   It should return any questions for whom the search term 
   is a substring of the question. 
 
-  @TODO TEST: Search by any phrase. The questions list will update to include 
+  @WIP TEST: Search by any phrase. The questions list will update to include 
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
