@@ -36,7 +36,7 @@ class QuizView extends Component {
     })
   }
 
-  selectCategory = ({type, id=0}) => {
+  selectCategory = (type, id) => {
     this.setState({quizCategory: {type, id}}, this.getNextQuestion)
   }
 
@@ -45,17 +45,17 @@ class QuizView extends Component {
   }
 
   getNextQuestion = () => {
-    const previousQuestions = [...this.state.previousQuestions]
-    if(this.state.currentQuestion.id) { previousQuestions.push(this.state.currentQuestion.id) }
+    const previousQuestions = [...this.state.previousQuestions] // Get list of all previous questions
+    if(this.state.currentQuestion.id) { previousQuestions.push(this.state.currentQuestion.id) } // If there is a currentQuestion in state, push it's ID into previousQuestions array
 
-    $.ajax({
-      url: '/api/play', //WIP: update request URL
+    $.ajax({ // Request from database a new question that is not in previous questions and is in category chosen if applicable
+      url: '/api/play', //DONE: update request URL
       type: "POST",
       dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify({
-        previous_questions: previousQuestions,
-        quiz_category: this.state.quizCategory
+        previousQuestions: previousQuestions,
+        quizCategory: this.state.quizCategory.type.id
       }),
       xhrFields: {
         withCredentials: true
@@ -72,8 +72,8 @@ class QuizView extends Component {
         return;
       },
       error: (error) => {
+        // alert(error)
         alert('Unable to load question. Please try your request again')
-        alert(JSON.stringify(error));
         return;
       }
     })
@@ -110,11 +110,11 @@ class QuizView extends Component {
                   {Object.keys(this.state.categories).map(id => {
                   return (
                     <div
-                      key={id}
-                      value={id}
+                      key={this.state.categories[id].id}
+                      value={this.state.categories[id].id}
                       className="play-category"
                       onClick={() => this.selectCategory({type:this.state.categories[id].type, id:this.state.categories[id].id})}>
-                      {this.state.categories[id]}
+                      {this.state.categories[id].type}
                     </div>
                   )
                 })}
@@ -157,7 +157,7 @@ class QuizView extends Component {
       : this.state.showAnswer 
         ? this.renderCorrectAnswer()
         : (
-          <div className="quiz-play-holder">
+          <div data-quizCategory={JSON.stringify(this.state.quizCategory)} className="quiz-play-holder">
             <div className="quiz-question">{this.state.currentQuestion.question}</div>
             <form onSubmit={this.submitGuess}>
               <input type="text" name="guess" onChange={this.handleChange}/>

@@ -14,7 +14,7 @@ def create_app(test_config=None):
   setup_db(app, 'postgres://postgres:$u944jAk161519@localhost:5432/trivia')
 
   '''
-  @DONE: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+  @DONE: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TO-DOs
   '''
   cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -191,18 +191,22 @@ def create_app(test_config=None):
   '''
   @app.route('/api/play', methods = ['POST'])
   def play():
-    if 'quiz_category' in request.json:
-      category_id = request.json['quiz_category']
+    if 'quizCategory' in request.json:
+      category_id = request.json['quizCategory']
     else:
       category_id = None
-      
-    previous_question_ids = request.json['previous_questions'] 
-
+    if 'previousQuestions' in request.json:
+      previous_question_ids = request.json['previousQuestions'] 
+    else:
+      previous_question_ids = None
     if category_id:
       relevant_questions = db.session.query(Question).filter(Question.id.notin_(previous_question_ids)).filter(Question.category == category_id).all()
     else:
       relevant_questions = db.session.query(Question).filter(Question.id.notin_(previous_question_ids)).all()
-    
+    # return jsonify({
+    #   "questions":relevant_questions
+    # })
+
     if len(relevant_questions) > 0:
       chosen_question = random.choice(relevant_questions)
       formatted_question = chosen_question.format()
@@ -213,7 +217,8 @@ def create_app(test_config=None):
     else:
       return jsonify({
         "success":True,
-        "question":"There are no remaining questions for this input"
+        "question":False,
+        # "requestData":request # This causes a fatal error. Something in request is not json serialized
       })
 
   '''
