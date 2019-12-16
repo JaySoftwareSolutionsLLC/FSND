@@ -117,13 +117,13 @@ def create_app(test_config=None):
   @app.route('/api/questions', methods=['POST'])
   def create_question():
     response = {}
-    question = request.json['question']
-    answer = request.json['answer']
-    category = request.json['category']
-    difficulty = request.json['difficulty']
-    new_question = Question(question = question, answer = answer, category = category, difficulty = difficulty)
-    response['request'] = new_question.format()
     try:
+      question = request.json['question']
+      answer = request.json['answer']
+      category = request.json['category']
+      difficulty = request.json['difficulty']
+      new_question = Question(question = question, answer = answer, category = category, difficulty = difficulty)
+      response['request'] = new_question.format()
       db.session.add(new_question)
       db.session.commit()
       response['success'] = True
@@ -140,7 +140,7 @@ def create_app(test_config=None):
   It should return any questions for whom the search term 
   is a substring of the question. 
 
-  @WIP TEST: Search by any phrase. The questions list will update to include 
+  @DONE TEST: Search by any phrase. The questions list will update to include 
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
@@ -160,14 +160,14 @@ def create_app(test_config=None):
   @DONE: 
   Create a GET endpoint to get questions based on category. 
 
-  @TODO TEST: In the "List" tab / main screen, clicking on one of the 
+  @DONE TEST: In the "List" tab / main screen, clicking on one of the 
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
   @app.route('/api/categories/<int:category_id>/questions', methods=['GET'])
   # @cross_origin()
   def retrieve_category_questions(category_id):
-
+    category_id = str(category_id)
     relevant_questions = Question.query.filter_by(category = category_id).all()
     formatted_questions = [question.format() for question in relevant_questions]
     return jsonify({
@@ -185,27 +185,28 @@ def create_app(test_config=None):
   and return a random questions within the given category, 
   if provided, and that is not one of the previous questions. 
 
-  @TODO TEST: In the "Play" tab, after a user selects "All" or a category,
+  @DONE TEST: In the "Play" tab, after a user selects "All" or a category,
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
   @app.route('/api/play', methods = ['POST'])
   def play():
     if 'quizCategory' in request.json:
-      category_id = request.json['quizCategory']
+      category_id = str(request.json['quizCategory'])
     else:
       category_id = None
     if 'previousQuestions' in request.json:
       previous_question_ids = request.json['previousQuestions'] 
     else:
       previous_question_ids = None
-    if category_id:
+    if category_id and previous_question_ids:
       relevant_questions = db.session.query(Question).filter(Question.id.notin_(previous_question_ids)).filter(Question.category == category_id).all()
-    else:
+    elif previous_question_ids:
       relevant_questions = db.session.query(Question).filter(Question.id.notin_(previous_question_ids)).all()
-    # return jsonify({
-    #   "questions":relevant_questions
-    # })
+    elif category_id:
+      relevant_questions = db.session.query(Question).filter(Question.category == category_id).all()
+    else:
+      relevant_questions = db.session.query(Question).all()
 
     if len(relevant_questions) > 0:
       chosen_question = random.choice(relevant_questions)
