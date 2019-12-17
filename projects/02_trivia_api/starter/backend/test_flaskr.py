@@ -23,17 +23,18 @@ class TriviaTestCase(unittest.TestCase):
             setup_db(self.app, self.database_path)
             self.db.init_app(self.app)
 
-            self.db.session.execute("TRUNCATE categories, questions RESTART IDENTITY CASCADE")
-            category1 = Category(type="Science") # Create new category for DB
-            if len(Category.query.all()) == 0: # Only push this category in once
-                self.db.session.add(category1) # Add category to DB
-                self.db.session.commit() # Commit changes
-            question1 = Question(question="What did Alexander Fleming discover", answer="Penicillin", category="1", difficulty=2) # Create new category for DB
-            if len(Question.query.all()) == 0: # Only push this category in once
-                self.db.session.add(question1) # Add category to DB
-                self.db.session.commit() # Commit changes
+            self.db.session.execute(
+                "TRUNCATE categories, questions RESTART IDENTITY CASCADE")
+            category1 = Category(type="Science")  # Create new category for DB
+            if len(Category.query.all()) == 0:  # Only push this category in once
+                self.db.session.add(category1)  # Add category to DB
+                self.db.session.commit()  # Commit changes
+            question1 = Question(question="What did Alexander Fleming discover",
+                                 answer="Penicillin", category="1", difficulty=2)  # Create new category for DB
+            if len(Question.query.all()) == 0:  # Only push this category in once
+                self.db.session.add(question1)  # Add category to DB
+                self.db.session.commit()  # Commit changes
 
-    
     def tearDown(self):
         """Executed after reach test"""
         pass
@@ -42,25 +43,31 @@ class TriviaTestCase(unittest.TestCase):
     WIP
     Write at least one test for each test for successful operation and for expected errors.
     """
+
     def test_post_question(self):
-        res = self.client().post('/api/questions', json={"question": "What was Einsteins famous equation", "answer": "E=MC2", "category": 1, "difficulty": 2})
+        res = self.client().post('/api/questions',
+                                 json={"question": "What was Einsteins famous equation", "answer": "E=MC2", "category": 1, "difficulty": 2})
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 200) # Ensure successful request
-        self.assertTrue(data['success']) # Ensure JSON response was successful
+        self.assertEqual(res.status_code, 200)  # Ensure successful request
+        self.assertTrue(data['success'])  # Ensure JSON response was successful
         # Ensure posted data persisted in DB
         questions = Question.query.all()
-        self.assertEqual(len(questions), 2) # There should now be 2 questions in db      
+        # There should now be 2 questions in db
+        self.assertEqual(len(questions), 2)
 
     def test_post_question_with_bad_input(self):
-        res = self.client().post('/api/questions', json={"question": "What was Einsteins famous equation"})
+        res = self.client().post('/api/questions',
+                                 json={"question": "What was Einsteins famous equation"})
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 200) # Ensure successful request
-        self.assertFalse(data['success']) # Ensure JSON response was successful
+        self.assertEqual(res.status_code, 200)  # Ensure successful request
+        # Ensure JSON response was successful
+        self.assertFalse(data['success'])
         # Ensure posted data persisted in DB
         questions = Question.query.all()
-        self.assertEqual(len(questions), 1) # There should still only be 1 question in db      
+        # There should still only be 1 question in db
+        self.assertEqual(len(questions), 1)
 
     def test_get_paginated_questions(self):
         res = self.client().get('/api/questions')
@@ -83,20 +90,24 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertEqual(data['request']['id'], 1) # Verify that question with id=1 was in fact deleted
+        # Verify that question with id=1 was in fact deleted
+        self.assertEqual(data['request']['id'], 1)
         # Ensure posted data persisted in DB
         questions = Question.query.all()
-        self.assertEqual(len(questions), 0) # There should now be 0 questions in db   
+        # There should now be 0 questions in db
+        self.assertEqual(len(questions), 0)
 
     def test_delete_invalid_question(self):
         res = self.client().delete('/api/questions/5000')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        self.assertFalse(data['success']) # Ensure that success response is False
+        # Ensure that success response is False
+        self.assertFalse(data['success'])
 
     def test_search_questions(self):
-        res = self.client().post('/api/questions/search', json={"searchTerm" : "Alexander"})
+        res = self.client().post('/api/questions/search',
+                                 json={"searchTerm": "Alexander"})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -104,7 +115,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['total_questions'], 1)
 
     def test_search_questions_with_no_questions(self):
-        res = self.client().post('/api/questions/search', json={"searchTerm" : "Doesn't Exist"})
+        res = self.client().post('/api/questions/search',
+                                 json={"searchTerm": "Doesn't Exist"})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -112,7 +124,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['total_questions'], 0)
 
     def test_play(self):
-        res = self.client().post('/api/play', json={"quizCategory" : 1})
+        res = self.client().post('/api/play', json={"quizCategory": 1})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -120,7 +132,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['question']['id'], 1)
 
     def test_play_with_no_questions(self):
-        res = self.client().post('/api/play', json={"quizCategory" : 2})
+        res = self.client().post('/api/play', json={"quizCategory": 2})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -141,9 +153,9 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertEqual(data['total_questions'], 0) # No questions exist for category 2
+        # No questions exist for category 2
+        self.assertEqual(data['total_questions'], 0)
 
-        
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
