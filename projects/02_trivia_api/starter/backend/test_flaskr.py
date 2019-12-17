@@ -14,8 +14,21 @@ class TriviaTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "trivia_test"
-        self.database_path = "postgres://postgres:$u944jAk161519@localhost:5432/trivia_test"
+        self.database_dialect = 'postgres'
+        self.database_username = 'postgres'
+        self.database_pass = '$u944jAk161519'
+        self.database_root = 'localhost'
+        self.database_port = '5432'
+        self.database_name = 'trivia_test'
+
+        self.database_path = "{}://{}:{}@{}:{}/{}".format(
+            self.database_dialect,
+            self.database_username,
+            self.database_pass,
+            self.database_root,
+            self.database_port,
+            self.database_name
+        )
 
         # binds the app to the current context
         with self.app.app_context():
@@ -25,15 +38,20 @@ class TriviaTestCase(unittest.TestCase):
 
             self.db.session.execute(
                 "TRUNCATE categories, questions RESTART IDENTITY CASCADE")
-            category1 = Category(type="Science")  # Create new category for DB
-            if len(Category.query.all()) == 0:  # Only push this category in once
-                self.db.session.add(category1)  # Add category to DB
-                self.db.session.commit()  # Commit changes
-            question1 = Question(question="What did Alexander Fleming discover",
-                                 answer="Penicillin", category="1", difficulty=2)  # Create new category for DB
-            if len(Question.query.all()) == 0:  # Only push this category in once
-                self.db.session.add(question1)  # Add category to DB
-                self.db.session.commit()  # Commit changes
+            # Create new category for DB
+            category1 = Category(type="Science")
+            if len(Category.query.all()) == 0:
+                self.db.session.add(category1)
+                self.db.session.commit()
+            # Create new question for DB
+            # To adhere to PEP8 how do we keep these lines below 79 characters?
+            question1 = Question(question="What did Alexander Fleming discover"
+                                , answer="Penicillin"
+                                , category="1"
+                                , difficulty=2)  
+            if len(Question.query.all()) == 0: 
+                self.db.session.add(question1)
+                self.db.session.commit()
 
     def tearDown(self):
         """Executed after reach test"""
@@ -41,12 +59,17 @@ class TriviaTestCase(unittest.TestCase):
 
     """
     WIP
-    Write at least one test for each test for successful operation and for expected errors.
+    Write at least one test for each test for 
+    successful operation and for expected errors.
     """
 
     def test_post_question(self):
-        res = self.client().post('/api/questions',
-                                 json={"question": "What was Einsteins famous equation", "answer": "E=MC2", "category": 1, "difficulty": 2})
+        res = self.client().post(
+            '/api/questions',
+            json={"question": "What was Einsteins famous equation",
+                "answer": "E=MC2",
+                "category": 1,
+                "difficulty": 2})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)  # Ensure successful request
@@ -57,8 +80,14 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(len(questions), 2)
 
     def test_post_question_with_bad_input(self):
-        res = self.client().post('/api/questions',
-                                 json={"question": "What was Einsteins famous equation"})
+        res = self
+            .client()
+            .post(
+                '/api/questions',
+                json={
+                    "question": "What was Einsteins famous equation"
+                }
+            )
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)  # Ensure successful request

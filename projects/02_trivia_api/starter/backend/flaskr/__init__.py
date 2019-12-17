@@ -15,13 +15,14 @@ def create_app(test_config=None):
     setup_db(app, 'postgres://postgres:$u944jAk161519@localhost:5432/trivia')
 
     '''
-  @DONE: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TO-DOs
-  '''
+    @DONE: Set up CORS. Allow '*' for origins.
+    Delete the sample route after completing the TO-DOs
+    '''
     cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     '''
-  @DONE: Use the after_request decorator to set Access-Control-Allow
-  '''
+    @DONE: Use the after_request decorator to set Access-Control-Allow
+    '''
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Headers',
@@ -30,18 +31,13 @@ def create_app(test_config=None):
         return response
 
     '''
-  @DONE: 
-  Create an endpoint to handle GET requests 
-  for all available categories.
-  '''
+    @DONE: 
+    Create an endpoint to handle GET requests 
+    for all available categories.
+    '''
     @app.route('/api/categories', methods=['GET'])
     # @cross_origin()
     def retrieve_categories():
-        # page = request.args.get('page', 1, type=int) # Retrieve page argument from request to specify which plants to return
-        # pageSize = 10
-        # start = (page - 1) * pageSize
-        # end = start + pageSize
-
         categories = Category.query.all()
         formatted_categories = [category.format() for category in categories]
         return jsonify({
@@ -51,17 +47,18 @@ def create_app(test_config=None):
         })
 
     '''
-  @DONE: 
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories.
+    @DONE: 
+    Create an endpoint to handle GET requests for questions, 
+    including pagination (every 10 questions). 
+    This endpoint should return a list of questions, 
+    number of total questions, current category, categories.
 
-  @DONE TEST: At this point, when you start the application
-  you should see questions and categories generated,
-  ten questions per page and pagination at the bottom of the screen for three pages.
-  Clicking on the page numbers should update the questions. 
-  '''
+    @DONE TEST: At this point, when you start the application
+    you should see questions and categories generated,
+    ten questions per page and pagination at the bottom
+    of the screen for three pages.
+    Clicking on the page numbers should update the questions. 
+    '''
     @app.route('/api/questions', methods=['GET'])
     # @cross_origin()
     def retrieve_questions():
@@ -88,8 +85,9 @@ def create_app(test_config=None):
   @DONE: 
   Create an endpoint to DELETE question using a question ID. 
 
-  @DONE TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
+  @DONE TEST: When you click the trash icon next 
+    to a question, the question will be removed.
+  This removal will persist in the database and when you refresh the page.
   '''
     @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
@@ -126,7 +124,8 @@ def create_app(test_config=None):
             category = request.json['category']
             difficulty = request.json['difficulty']
             new_question = Question(
-                question=question, answer=answer, category=category, difficulty=difficulty)
+                question=question, answer=answer,
+                category=category, difficulty=difficulty)
             response['request'] = new_question.format()
             db.session.add(new_question)
             db.session.commit()
@@ -207,8 +206,9 @@ def create_app(test_config=None):
         else:
             previous_question_ids = None
         if category_id and previous_question_ids:
-            relevant_questions = db.session.query(Question).filter(Question.id.notin_(
-                previous_question_ids)).filter(Question.category == category_id).all()
+            relevant_questions = db.session.query(Question).filter(
+                Question.id.notin_(previous_question_ids)
+            ).filter(Question.category == category_id).all()
         elif previous_question_ids:
             relevant_questions = db.session.query(Question).filter(
                 Question.id.notin_(previous_question_ids)).all()
