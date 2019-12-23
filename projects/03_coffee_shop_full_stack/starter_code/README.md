@@ -20,7 +20,7 @@ There are `@TODO` comments throughout project. We recommend tackling the section
 
 ## About the Stack
 
-We started the full stack application for you. It is desiged with some key functional areas:
+We started the full stack application for you. It is designed with some key functional areas:
 
 ### Backend
 
