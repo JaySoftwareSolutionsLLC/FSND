@@ -2,9 +2,9 @@ import os
 from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
-from .database.models import db_drop_and_create_all, setup_db, Drink
+from .database.models import db, db_drop_and_create_all, setup_db, Drink
 from .auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
@@ -12,7 +12,7 @@ setup_db(app)
 CORS(app)
 
 '''
-@TODO uncomment the following line to initialize the datbase
+@ DONE uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 '''
@@ -28,8 +28,17 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['GET'])
+@cross_origin()
 def retrieve_drinks():
-    return '-_-'
+    body = {}
+    drinks = Drink.query.all()
+    short_drinks = []
+    for d in drinks:
+        short_drinks.append(d.short())
+    body['status'] = '200'
+    # body['len'] = len(drinks)
+    body['drinks'] = short_drinks
+    return jsonify(body)#, "filepath": database_path})
 
 
 '''
