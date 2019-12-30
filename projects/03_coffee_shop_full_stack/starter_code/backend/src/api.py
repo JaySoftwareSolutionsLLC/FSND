@@ -20,72 +20,144 @@ CORS(app)
 
 ## ROUTES
 '''
-@TODO implement endpoint
+@WIP implement endpoint
     GET /drinks
-        it should be a public endpoint
-        it should contain only the drink.short() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
+        DONE it should be a public endpoint
+        DONE it should contain only the drink.short() data representation
+        DONE returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
+        DONE? or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['GET'])
 @cross_origin()
 def retrieve_drinks():
     body = {}
-    drinks = Drink.query.all()
-    short_drinks = []
-    for d in drinks:
-        short_drinks.append(d.short())
-    body['status'] = '200'
-    # body['len'] = len(drinks)
-    body['drinks'] = short_drinks
-    return jsonify(body)#, "filepath": database_path})
+    try:
+        drinks = Drink.query.all()
+        short_drinks = []
+        for d in drinks:
+            short_drinks.append(d.short())
+        body['success'] = True
+        # body['len'] = len(drinks)
+        body['drinks'] = short_drinks
+    except:
+        body['success'] = False
+    finally:
+        return jsonify(body)
 
 
 '''
-@TODO implement endpoint
+@WIP implement endpoint
     GET /drinks-detail
-        it should require the 'get:drinks-detail' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
+        WIP it should require the 'get:drinks-detail' permission
+        DONE it should contain the drink.long() data representation
+        DONE returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
+        DONE? or appropriate status code indicating reason for failure
 '''
-
+@app.route('/drinks-detail', methods=['GET'])
+@cross_origin()
+# requires get:drinks-detail permission
+def retrieve_drinks_detail():
+    body = {}
+    drinks = Drink.query.all()
+    long_drinks = []
+    for d in drinks:
+        long_drinks.append(d.long())
+        # Issue is being caused because posted items use single quotes in recipe string rather than double quotes
+    body['success'] = True
+    body['drinks'] = long_drinks
+    return jsonify(body)
 
 '''
-@TODO implement endpoint
+@WIP implement endpoint
     POST /drinks
-        it should create a new row in the drinks table
-        it should require the 'post:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
+        WIP it should create a new row in the drinks table
+        WIP it should require the 'post:drinks' permission
+        DONE it should contain the drink.long() data representation
+        DONE returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
+        WIP or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['POST'])
+@cross_origin()
+def post_drink():
+    body = {}
+    try:
+        title = request.json['title']
+        # recipe = str([{"color": "sienna", "name":"Angel's Envy Rye", "parts":5}, {"color": "peru", "name":"Sweet Vermouth", "parts":1}])
+        recipe = json.dumps(request.json['recipe'])
+        new_drink = Drink(title = title, recipe = recipe)
+        db.session.add(new_drink)
+        db.session.commit()
+        body['success'] = True
+        body['drinks'] = new_drink.long()
+    except:
+        body['success'] = False
+    finally:
+        return jsonify(body)
 
 
 '''
-@TODO implement endpoint
+@WIP implement endpoint
     PATCH /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should update the corresponding row for <id>
-        it should require the 'patch:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
-        or appropriate status code indicating reason for failure
+        DONE where <id> is the existing model id
+        DONE it should respond with a 404 error if <id> is not found
+        DONE it should update the corresponding row for <id>
+        WIP it should require the 'patch:drinks' permission
+        DONE it should contain the drink.long() data representation
+        DONE returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
+        WIP appropriate status code indicating reason for failure
 '''
-
+@app.route('/drinks/<int:id>', methods=['PATCH'])
+@cross_origin()
+def patch_drink(id):
+    req = request.get_json()
+    body = {}
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+    if drink is None:
+        abort(404)
+    else:
+        try:
+            # for attr, value in req.items():
+                # drink.attr = value
+            if 'title' in req:
+                drink.title = str(req.get('title'))
+            if 'recipe' in req:
+                drink.recipe = json.dumps(req.get('recipe'))
+            drink.update()
+                # drink.commit()
+            body['success'] = True
+            body['drinks'] = drink.long()
+        except:
+            body['success'] = False
+        finally:
+            return jsonify(body)
 
 '''
-@TODO implement endpoint
+@WIP implement endpoint
     DELETE /drinks/<id>
-        where <id> is the existing model id
-        it should respond with a 404 error if <id> is not found
-        it should delete the corresponding row for <id>
-        it should require the 'delete:drinks' permission
-    returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
-        or appropriate status code indicating reason for failure
+        DONE where <id> is the existing model id
+        DONE it should respond with a 404 error if <id> is not found
+        DONE it should delete the corresponding row for <id>
+        WIP it should require the 'delete:drinks' permission
+        DONE returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
+        WIP or appropriate status code indicating reason for failure
 '''
-
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+@cross_origin()
+def delete_drink(id):
+    body = {}
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+    if drink is None:
+        abort(404)
+    else:
+        try:
+            drink.delete()
+            db.session.commit()
+            body['success'] = True
+            body['delete'] = drink.id
+        except:
+            body['success'] = False
+        finally:
+            return jsonify(body)
 
 ## Error Handling
 '''
@@ -100,23 +172,36 @@ def unprocessable(error):
                     }), 422
 
 '''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
+@DONE implement error handlers using the @app.errorhandler(error) decorator
     each error handler should return (with approprate messages):
              jsonify({
                     "success": False, 
                     "error": 404,
                     "message": "resource not found"
                     }), 404
+'''
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+                    "success": False, 
+                    "error": 404,
+                    "message": "resource not found"
+                    }), 404
 
 '''
-
-'''
-@TODO implement error handler for 404
+@DONE implement error handler for 404
     error handler should conform to general task above 
 '''
 
 
 '''
-@TODO implement error handler for AuthError
+@DONE? implement error handler for AuthError
     error handler should conform to general task above 
 '''
+@app.errorhandler(401)
+def not_found(error):
+    return jsonify({
+                    "success": False, 
+                    "error": 401,
+                    "message": "unauthorized"
+                    }), 401
