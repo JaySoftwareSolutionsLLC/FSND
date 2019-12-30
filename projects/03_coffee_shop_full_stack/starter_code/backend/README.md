@@ -74,8 +74,8 @@ The `--reload` flag will detect file changes and restart the server automaticall
     - DONE Sign into each account and make note of the JWT.
     - DONE Import the postman collection `./starter_code/backend/udacity-fsnd-udaspicelatte.postman_collection.json`
     - DONE Right-clicking the collection folder for barista and manager, navigate to the authorization tab, and including the JWT in the token field (you should have noted these JWTs).
-    - WIP  Run the collection and correct any errors.
-    - Export the collection overwriting the one we've included so that we have your proper JWTs during review!
+    - DONE  Run the collection and correct any errors.
+    - DONE Export the collection overwriting the one we've included so that we have your proper JWTs during review!
 
 ### Implement The Server
 

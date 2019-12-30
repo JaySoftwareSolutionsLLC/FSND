@@ -20,7 +20,7 @@ CORS(app)
 
 ## ROUTES
 '''
-@WIP implement endpoint
+@DONE implement endpoint
     GET /drinks
         DONE it should be a public endpoint
         DONE it should contain only the drink.short() data representation
@@ -46,17 +46,18 @@ def retrieve_drinks():
 
 
 '''
-@WIP implement endpoint
+@DONE implement endpoint
     GET /drinks-detail
-        WIP it should require the 'get:drinks-detail' permission
+        DONE it should require the 'get:drinks-detail' permission
         DONE it should contain the drink.long() data representation
         DONE returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         DONE? or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks-detail', methods=['GET'])
 @cross_origin()
+@requires_auth('get:drinks-detail')
 # requires get:drinks-detail permission
-def retrieve_drinks_detail():
+def retrieve_drinks_detail(jwt):
     body = {}
     drinks = Drink.query.all()
     long_drinks = []
@@ -68,17 +69,18 @@ def retrieve_drinks_detail():
     return jsonify(body)
 
 '''
-@WIP implement endpoint
+@DONE implement endpoint
     POST /drinks
-        WIP it should create a new row in the drinks table
-        WIP it should require the 'post:drinks' permission
+        DONE it should create a new row in the drinks table
+        DONE it should require the 'post:drinks' permission
         DONE it should contain the drink.long() data representation
         DONE returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        WIP or appropriate status code indicating reason for failure
+        DONE? or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['POST'])
 @cross_origin()
-def post_drink():
+@requires_auth('post:drinks')
+def post_drink(jwt):
     body = {}
     try:
         title = request.json['title']
@@ -96,19 +98,20 @@ def post_drink():
 
 
 '''
-@WIP implement endpoint
+@DONE implement endpoint
     PATCH /drinks/<id>
         DONE where <id> is the existing model id
         DONE it should respond with a 404 error if <id> is not found
         DONE it should update the corresponding row for <id>
-        WIP it should require the 'patch:drinks' permission
+        DONE it should require the 'patch:drinks' permission
         DONE it should contain the drink.long() data representation
         DONE returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
-        WIP appropriate status code indicating reason for failure
+        DONE? appropriate status code indicating reason for failure
 '''
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @cross_origin()
-def patch_drink(id):
+@requires_auth('patch:drinks')
+def patch_drink(jwt, id):
     req = request.get_json()
     body = {}
     drink = Drink.query.filter(Drink.id == id).one_or_none()
@@ -125,25 +128,26 @@ def patch_drink(id):
             drink.update()
                 # drink.commit()
             body['success'] = True
-            body['drinks'] = drink.long()
+            body['drinks'] = [drink.long()]
         except:
             body['success'] = False
         finally:
             return jsonify(body)
 
 '''
-@WIP implement endpoint
+@DONE implement endpoint
     DELETE /drinks/<id>
         DONE where <id> is the existing model id
         DONE it should respond with a 404 error if <id> is not found
         DONE it should delete the corresponding row for <id>
-        WIP it should require the 'delete:drinks' permission
+        DONE it should require the 'delete:drinks' permission
         DONE returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
-        WIP or appropriate status code indicating reason for failure
+        DONE? or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @cross_origin()
-def delete_drink(id):
+@requires_auth('delete:drinks')
+def delete_drink(jwt, id):
     body = {}
     drink = Drink.query.filter(Drink.id == id).one_or_none()
     if drink is None:
@@ -195,13 +199,12 @@ def not_found(error):
 
 
 '''
-@DONE? implement error handler for AuthError
+@DONE implement error handler for AuthError
     error handler should conform to general task above 
 '''
-@app.errorhandler(401)
-def not_found(error):
-    return jsonify({
-                    "success": False, 
-                    "error": 401,
-                    "message": "unauthorized"
-                    }), 401
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    print(jsonify(ex.error))
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
