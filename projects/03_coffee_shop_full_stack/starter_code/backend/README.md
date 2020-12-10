@@ -52,6 +52,14 @@ The `--reload` flag will detect file changes and restart the server automaticall
 
 ### Setup Auth0
 
+### ROLES
+
+#### Teacher
+Represents a teacher of the class. They are able to create new cheatsheets (Categories) and edit the content of those cheatsheets (Topics & Concepts)
+
+#### Student
+Represents a student of the class. They are able to view cheatsheets but are not able to edit, delete, or create new content.
+
 1. DONE Create a new Auth0 Account
 2. DONE Select a unique tenant domain
 3. DONE Create a new, single page web application
